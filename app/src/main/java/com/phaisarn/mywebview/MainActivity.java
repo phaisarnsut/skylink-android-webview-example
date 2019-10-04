@@ -4,6 +4,7 @@ import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 
 import android.Manifest;
+import android.annotation.TargetApi;
 import android.os.Build;
 import android.os.Bundle;
 import android.util.Log;
@@ -44,7 +45,21 @@ public class MainActivity extends AppCompatActivity implements EasyPermissions.P
         myWebView.setWebChromeClient(new WebChromeClient() {
             // Grant permissions for camera
             @Override
-            public void onPermissionRequest(PermissionRequest request) {
+            public void onPermissionRequest(final PermissionRequest request) {
+                Log.d(TAG, "onPermissionRequest");
+
+                MainActivity.this.runOnUiThread(new Runnable() {
+                    @TargetApi(Build.VERSION_CODES.LOLLIPOP)
+                    @Override
+                    public void run() {
+                        if (request.getOrigin().toString().equals("*")) { // https://YOUR_ORIGIN_GOES_HERE
+                            request.grant(request.getResources());
+                        } else {
+                            request.deny();
+                        }
+                    }
+                });
+
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
                     request.grant(request.getResources());
                 }
@@ -80,7 +95,8 @@ public class MainActivity extends AppCompatActivity implements EasyPermissions.P
     }
 
     @Override
-    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
+    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions,
+                                           @NonNull int[] grantResults) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults);
         Log.d(TAG, "onRequestPermissionsResult");
         EasyPermissions.onRequestPermissionsResult(requestCode, permissions, grantResults, this);
